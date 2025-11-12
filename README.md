@@ -26,7 +26,7 @@ Para desplegar este pod, sigue los siguientes pasos en la interfaz de RunPod:
     -   **Port:** Expón el puerto `8000`.
 5.  **Pega el siguiente comando** en el campo **`Container Start Command`**:
     ```bash
-    bash -c "git clone https://github.com/ceutaseguridad/fileserver.git /workspace/fileserver && cd /workspace/fileserver && chmod +x pod_start.sh && ./pod_start.sh"
+    bash -c "rm -rf /workspace/fileserver && git clone https://github.com/ceutaseguridad/fileserver.git /workspace/fileserver && cd /workspace/fileserver && chmod +x pod_start.sh && ./pod_start.sh"
     ```
 6.  **Despliega el pod.** El script `pod_start.sh` se encargará de toda la configuración interna automáticamente. Puedes ver el progreso en los logs del pod.
 
