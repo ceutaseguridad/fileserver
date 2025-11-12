@@ -9,8 +9,8 @@ echo "--- [Morpheus Gateway] Actualizando paquetes e instalando git y pip... ---
 apt-get update -y && apt-get install -y git python3-pip
 
 # --- PASO 2: Clonar el repositorio del servidor de ficheros ---
-# Se clona en /workspace/fileserver. Se elimina si ya existe para asegurar una copia limpia.
-echo "--- [Morpheus Gateway] Clonando el repositorio del servidor... ---"
+# [CORRECCIÓN] Se elimina el directorio si ya existe para asegurar una copia limpia en cada reinicio.
+echo "--- [Morpheus Gateway] Clonando el repositorio del servidor (asegurando una copia limpia)... ---"
 rm -rf /workspace/fileserver
 git clone https://github.com/ceutaseguridad/fileserver.git /workspace/fileserver
 
