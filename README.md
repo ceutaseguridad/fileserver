@@ -28,6 +28,6 @@ Para desplegar este pod, sigue los siguientes pasos en la interfaz de RunPod:
     ```bash
     bash -c "rm -rf /workspace/fileserver && git clone https://github.com/ceutaseguridad/fileserver.git /workspace/fileserver && cd /workspace/fileserver && chmod +x pod_start.sh && ./pod_start.sh"
     ```
-6.  **Despliega el pod.** El script `pod_start.sh` se encargará de toda la configuración interna automáticamente. Puedes ver el progreso en los logs del pod.
+6.  **Despliega el pod.** El comando de inicio se encargará de toda la configuración automáticamente. Puedes ver el progreso en los logs del pod.
 
 Una vez desplegado, el pod estará listo para recibir y servir archivos.
