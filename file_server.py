@@ -91,19 +91,28 @@ def cleanup_job_files(worker_job_id):
     """
     Elimina el directorio completo asociado a un trabajo en 'job_outputs'.
     """
-    # --- [CAMBIO CLAVE 3] ---
-    # Usamos JOB_FILES_DIR para asegurar que se borra la carpeta correcta.
-    job_directory = os.path.join(JOB_FILES_DIR, worker_job_id)
-    logger.info(f"Solicitud de limpieza para el directorio: {job_directory}")
+    logger.info(f"Solicitud de limpieza para el job ID: {worker_job_id}")
     
-    if not os.path.isdir(job_directory):
+    # Probamos las dos rutas posibles debido a la dualidad /workspace vs /runpod-volume
+    path1 = os.path.join("/runpod-volume/job_outputs", worker_job_id)
+    path2 = os.path.join("/workspace/job_outputs", worker_job_id)
+
+    job_directory = None
+    if os.path.isdir(path1):
+        job_directory = path1
+    elif os.path.isdir(path2):
+        job_directory = path2
+    
+    if not job_directory:
+        logger.error(f"Directorio del trabajo no encontrado en ninguna de las rutas posibles: {path1} o {path2}")
         return jsonify({"error": "Job directory not found"}), 404
+
     try:
         shutil.rmtree(job_directory)
         logger.info(f"Directorio eliminado con éxito: {job_directory}")
         return jsonify({"message": f"Successfully cleaned up files for job {worker_job_id}"}), 200
     except Exception as e:
-        logger.error(f"Error durante la limpieza: {e}", exc_info=True)
+        logger.error(f"Error durante la limpieza de {job_directory}: {e}", exc_info=True)
         return jsonify({"error": f"Failed to cleanup directory: {e}"}), 500
 
 # --- Bloque de Ejecución ---
