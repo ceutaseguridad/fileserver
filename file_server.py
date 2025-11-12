@@ -1,28 +1,31 @@
+# file_server.py (VERSIÓN FINAL Y COHERENTE)
+
 import os
 import shutil
 from flask import Flask, request, jsonify, send_from_directory
 import logging
 
 # --- Configuración ---
-VERSION = "1.0"
-BASE_STORAGE_PATH = "/runpod-volume/morpheus_storage"
-OUTPUTS_DIR = os.path.join(BASE_STORAGE_PATH, "outputs")
+VERSION = "1.1" # Versión actualizada
+# --- [CAMBIO CLAVE 1] ---
+# La base es el volumen, y el directorio de trabajo es 'job_outputs' para ser coherente con el worker.
+BASE_STORAGE_PATH = "/runpod-volume"
+JOB_FILES_DIR = os.path.join(BASE_STORAGE_PATH, "job_outputs")
 
 # Configuración del logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(name)s] - %(message)s')
 logger = logging.getLogger('MorpheusGateway')
 
-# Crear los directorios base si no existen al arrancar
-os.makedirs(OUTPUTS_DIR, exist_ok=True)
+# Crear el directorio base si no existe al arrancar
+os.makedirs(JOB_FILES_DIR, exist_ok=True)
 
 app = Flask(__name__)
 
-# --- [NUEVO] Log de inicio para confirmar que el servidor está activo ---
 logger.info("==========================================================")
 logger.info(f"==      MORPHEUS FILE GATEWAY v{VERSION} INICIADO         ==")
 logger.info("==========================================================")
 logger.info(f"Modo de operación: Activo y escuchando.")
-logger.info(f"Ruta de almacenamiento gestionada: {BASE_STORAGE_PATH}")
+logger.info(f"Ruta de almacenamiento gestionada: {JOB_FILES_DIR}")
 logger.info("==========================================================")
 
 # --- Endpoints de la API ---
@@ -35,10 +38,8 @@ def health_check():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     """
-    Maneja la subida de archivos. Los guarda en una subcarpeta única
-    basada en el ID del trabajo (worker_job_id).
+    Maneja la subida de archivos. Los guarda en la carpeta coherente 'job_outputs'.
     """
-    # ... (El resto del código de la función no cambia)
     if 'file' not in request.files:
         return jsonify({"error": "No file part in the request"}), 400
     file = request.files['file']
@@ -48,12 +49,17 @@ def upload_file():
     if not worker_job_id:
         return jsonify({"error": "worker_job_id is required"}), 400
     try:
-        job_directory = os.path.join(OUTPUTS_DIR, worker_job_id)
+        # --- [CAMBIO CLAVE 2] ---
+        # Usamos JOB_FILES_DIR en lugar del antiguo OUTPUTS_DIR
+        job_directory = os.path.join(JOB_FILES_DIR, worker_job_id)
         os.makedirs(job_directory, exist_ok=True)
+        
         save_path = os.path.join(job_directory, file.filename)
         file.save(save_path)
         logger.info(f"Archivo guardado: {save_path}")
-        pod_path = os.path.join("outputs", worker_job_id, file.filename)
+        
+        # La ruta devuelta también debe ser coherente
+        pod_path = os.path.join("job_outputs", worker_job_id, file.filename)
         return jsonify({"message": "File uploaded successfully", "pod_path": pod_path, "worker_job_id": worker_job_id}), 201
     except Exception as e:
         logger.error(f"Error al subir el archivo: {e}", exc_info=True)
@@ -62,26 +68,34 @@ def upload_file():
 @app.route('/download/<path:filepath>', methods=['GET'])
 def download_file(filepath):
     """
-    Sirve un archivo para su descarga. La ruta completa se reconstruye
-    a partir de la ruta relativa proporcionada.
+    Sirve un archivo para su descarga desde la raíz del pod, que es donde el
+    runpod_client construirá la ruta.
     """
-    # ... (El resto del código de la función no cambia)
     logger.info(f"Solicitud de descarga para: {filepath}")
-    directory = os.path.join(BASE_STORAGE_PATH, os.path.dirname(filepath))
-    filename = os.path.basename(filepath)
-    if not os.path.exists(os.path.join(directory, filename)):
-        logger.error(f"Archivo no encontrado en la ruta de descarga: {directory}/{filename}")
+    
+    # La ruta completa que se busca en el disco. El file server se ejecuta desde '/'
+    absolute_path = os.path.join("/", filepath)
+
+    if not os.path.exists(absolute_path):
+        logger.error(f"Archivo no encontrado en la ruta de descarga: {absolute_path}")
         return jsonify({"error": "File not found"}), 404
+
+    directory = os.path.dirname(absolute_path)
+    filename = os.path.basename(absolute_path)
+    
+    logger.info(f"Sirviendo archivo '{filename}' desde el directorio '{directory}'")
     return send_from_directory(directory, filename, as_attachment=True)
 
 @app.route('/cleanup/<worker_job_id>', methods=['POST'])
 def cleanup_job_files(worker_job_id):
     """
-    Elimina el directorio completo asociado a un trabajo para limpiar espacio.
+    Elimina el directorio completo asociado a un trabajo en 'job_outputs'.
     """
-    # ... (El resto del código de la función no cambia)
-    job_directory = os.path.join(OUTPUTS_DIR, worker_job_id)
+    # --- [CAMBIO CLAVE 3] ---
+    # Usamos JOB_FILES_DIR para asegurar que se borra la carpeta correcta.
+    job_directory = os.path.join(JOB_FILES_DIR, worker_job_id)
     logger.info(f"Solicitud de limpieza para el directorio: {job_directory}")
+    
     if not os.path.isdir(job_directory):
         return jsonify({"error": "Job directory not found"}), 404
     try:
