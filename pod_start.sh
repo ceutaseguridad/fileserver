@@ -1,7 +1,12 @@
 #!/bin/bash
 # pod_start.sh para el Pod Gateway de Ficheros (Fileserver)
-# VERSIÓN ACTUALIZADA PARA USAR GUNICORN
+# VERSIÓN CORREGIDA Y ACTUALIZADA PARA USAR GUNICORN
 set -e
+
+# --- [CORRECCIÓN CRÍTICA] ---
+# NAVEGAMOS AL DIRECTORIO DE TRABAJO PRIMERO.
+# RunPod clona el repositorio en /workspace/fileserver, así que vamos allí.
+cd /workspace/fileserver
 
 echo "--- [Morpheus Gateway] Iniciando script de configuración (Gunicorn Mode) ---"
 
@@ -21,10 +26,9 @@ echo "--- [Morpheus Gateway] Estructura de carpetas verificada."
 
 # --- PASO 3: Instalar las dependencias de Python ---
 echo "--- [Morpheus Gateway] Instalando dependencias de Python desde requirements_pod.txt... ---"
-# IMPORTANTE: Asegúrate de que tu 'requirements_pod.txt' para este pod ahora incluye 'gunicorn'.
+# Ahora el comando encontrará el archivo porque estamos en el directorio correcto.
 python3 -m pip install -r requirements_pod.txt
 
 # --- PASO 4: Lanzar el servidor de ficheros con Gunicorn ---
 echo "--- [Morpheus Gateway] ¡Configuración completa! Lanzando el servidor con Gunicorn... ---"
-# Esta línea reemplaza 'python3 file_server.py' para usar un servidor de producción.
 exec gunicorn --workers 4 --bind 0.0.0.0:8000 file_server:app
