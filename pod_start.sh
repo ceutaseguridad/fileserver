@@ -28,7 +28,7 @@ echo "--- [Morpheus Gateway] Estructura de carpetas verificada."
 # --- PASO 3: Instalar las dependencias de Python ---
 # (Esta sección se mantiene como estaba en el original)
 echo "--- [Morpheus Gateway] Instalando dependencias de Python desde requirements_pod.txt... ---"
-python3 -m pip install -r requirements_pod.txt
+python3 -m pip install -r requirements.txt
 
 # --- PASO 4: Lanzar el servidor de ficheros con Gunicorn ---
 # (Esta es la única línea modificada respecto al original)
