@@ -1,9 +1,9 @@
 #!/bin/bash
-# Este script automatiza la configuración completa del Pod Gateway de Ficheros de Morpheus.
-# VERSIÓN CORREGIDA: Asume que el código ya ha sido clonado.
+# pod_start.sh para el Pod Gateway de Ficheros (Fileserver)
+# VERSIÓN ACTUALIZADA PARA USAR GUNICORN
 set -e
 
-echo "--- [Morpheus Gateway] Iniciando script de configuración ---"
+echo "--- [Morpheus Gateway] Iniciando script de configuración (Gunicorn Mode) ---"
 
 # --- PASO 1: Actualizar sistema e instalar dependencias base ---
 echo "--- [Morpheus Gateway] Actualizando paquetes e instalando git y pip... ---"
@@ -20,11 +20,11 @@ mkdir -p "$BASE_DIR/temp"
 echo "--- [Morpheus Gateway] Estructura de carpetas verificada."
 
 # --- PASO 3: Instalar las dependencias de Python ---
-echo "--- [Morpheus Gateway] Instalando dependencias de Python desde requirements.txt... ---"
-# Se asume que este script se ejecuta desde el directorio /workspace/fileserver
-python3 -m pip install -r requirements.txt
+echo "--- [Morpheus Gateway] Instalando dependencias de Python desde requirements_pod.txt... ---"
+# IMPORTANTE: Asegúrate de que tu 'requirements_pod.txt' para este pod ahora incluye 'gunicorn'.
+python3 -m pip install -r requirements_pod.txt
 
-# --- PASO 4: Lanzar el servidor de ficheros ---
-echo "--- [Morpheus Gateway] ¡Configuración completa! Lanzando el servidor Flask... ---"
-# El `exec` reemplaza el proceso del script con el de python, una práctica más limpia.
-exec python3 file_server.py
+# --- PASO 4: Lanzar el servidor de ficheros con Gunicorn ---
+echo "--- [Morpheus Gateway] ¡Configuración completa! Lanzando el servidor con Gunicorn... ---"
+# Esta línea reemplaza 'python3 file_server.py' para usar un servidor de producción.
+exec gunicorn --workers 4 --bind 0.0.0.0:8000 file_server:app
