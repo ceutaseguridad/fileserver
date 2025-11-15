@@ -9,7 +9,7 @@ import logging
 VERSION = "1.1" # Versión actualizada
 # --- [CAMBIO CLAVE 1] ---
 # La base es el volumen, y el directorio de trabajo es 'job_outputs' para ser coherente con el worker.
-BASE_STORAGE_PATH = "/runpod-volume"
+BASE_STORAGE_PATH = "/workspace"
 JOB_FILES_DIR = os.path.join(BASE_STORAGE_PATH, "job_outputs")
 
 # Configuración del logging
